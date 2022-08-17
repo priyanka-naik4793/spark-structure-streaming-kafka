@@ -36,10 +36,6 @@
             <layout>default</layout>
         </repository>
         <!-- further repository entries here -->
-        <repository>
-            <id>gitlab-maven</id>
-            <url>https://maestro.corelight.io/api/v4/projects/949/packages/maven</url>
-        </repository>
     </repositories>
 
     <dependencies>
@@ -100,7 +96,7 @@
             <artifactId>kafka-clients</artifactId>
             <version>2.7.0</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/org.apache.kafka/kafka-log4j-appender -->
+        <!-- https://mvnrepository.com/artifact/com.twitter/jsr166e -->
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-log4j-appender</artifactId>
@@ -226,6 +222,14 @@
             <build>
                 <plugins>
                     <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>2.22.2</version>
+                        <configuration>
+                            <useSystemClassLoader>false</useSystemClassLoader>
+                        </configuration>
+                    </plugin>
+                    <plugin>
                         <groupId>net.alchim31.maven</groupId>
                         <artifactId>scala-maven-plugin</artifactId>
                         <version>4.4.0</version>
@@ -235,11 +239,148 @@
                                 <phase>process-sources</phase>
                                 <goals>
                                     <goal>compile</goal>
+                                    <goal>testCompile</goal>
                                     <goal>add-source</goal>
                                 </goals>
                                 <configuration>
                                     <sourceDir>scala/src/main/scala</sourceDir>
+                                    <testSourceDir>scala/src/test/scala</testSourceDir>
                                     <recompileMode>incremental</recompileMode>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <!-- mkdir a generated folder for protos. -->
+                    <!-- Compile the proto file(s). -->
+                    <!-- Add the generated folder as a source. -->
+                    <!-- Test Suite -->
+                    <plugin>
+                        <groupId>org.scalatest</groupId>
+                        <artifactId>scalatest-maven-plugin</artifactId>
+                        <version>2.0.2</version>
+                        <configuration>
+                            <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
+                            <junitxml>.</junitxml>
+                            <parallel>false</parallel>
+                            <tagsToExclude>src.test.scala.com.ptrx.java.tags.JenkinsTest</tagsToExclude>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>test</id>
+                                <goals>
+                                    <goal>test</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <version>0.8.6</version>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>prepare-agent</goal>
+                                </goals>
+                            </execution>
+                            <!-- attached to Maven test phase -->
+                            <execution>
+                                <id>report</id>
+                                <phase>test</phase>
+                                <goals>
+                                    <goal>report</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-resources-plugin</artifactId>
+                        <version>2.6</version>
+                        <executions>
+                            <execution>
+                                <id>copy-resources</id>
+                                <phase>validate</phase>
+                                <goals>
+                                    <goal>copy-resources</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${project.basedir}/target</outputDirectory>
+                                    <includeEmptyDirs>true</includeEmptyDirs>
+                                    <resources>
+                                        <resource>
+                                            <directory>${project.basedir}/scala/src/resources</directory>
+                                            <filtering>false</filtering>
+                                        </resource>
+                                    </resources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- Jenkins Profile -->
+        <profile>
+            <id>jenkins</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>2.22.2</version>
+                        <configuration>
+                            <useSystemClassLoader>false</useSystemClassLoader>
+                        </configuration>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>net.alchim31.maven</groupId>
+                        <artifactId>scala-maven-plugin</artifactId>
+                        <version>4.4.0</version>
+                        <executions>
+                            <execution>
+                                <!--this is so we don't end with a compile error in maven-compiler-plugin-->
+                                <phase>process-sources</phase>
+                                <goals>
+                                    <goal>compile</goal>
+                                    <goal>testCompile</goal>
+                                    <goal>add-source</goal>
+                                </goals>
+                                <configuration>
+                                    <sourceDir>scala/src/main/scala</sourceDir>
+                                    <testSourceDir>scala/src/test/scala</testSourceDir>
+                                    <recompileMode>incremental</recompileMode>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+
+
+                    <!-- Test Suite -->
+                    <plugin>
+                        <artifactId>maven-resources-plugin</artifactId>
+                        <version>2.6</version>
+                        <executions>
+                            <execution>
+                                <id>copy-resources</id>
+                                <phase>validate</phase>
+                                <goals>
+                                    <goal>copy-resources</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${project.basedir}/target</outputDirectory>
+                                    <includeEmptyDirs>true</includeEmptyDirs>
+                                    <resources>
+                                        <resource>
+                                            <directory>${project.basedir}/scala/src/resources</directory>
+                                            <filtering>false</filtering>
+                                        </resource>
+                                    </resources>
                                 </configuration>
                             </execution>
                         </executions>

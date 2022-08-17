@@ -4,14 +4,18 @@
 from kafka import KafkaProducer
 import random
 from sys import argv, exit
-from time import time, sleep
-from datetime import datetime
+from time import sleep
+from datetime import datetime, timedelta
+import json
 
 # different vaccination "centres" with different
 VACCINATION_CENTRES = {
-    "Fortis": {'vaccination_completed': 0, 'male': (10000, 40000), 'female': (10000, 40000)},
-    "Akash": {'vaccination_completed': 0, 'male': (10000, 40000), 'female': (10000, 40000)},
-    "Ayushmaan": {'vaccination_completed': 0, 'male': (10000, 40000), 'female': (10000, 40000)},
+    "Fortis": {'event_time': datetime.now(), 'vaccination_completed': 0, 'male': (10000, 40000),
+               'female': (10000, 40000)},
+    "Akash": {'event_time': datetime.now() - timedelta(days=1), 'vaccination_completed': 0, 'male': (10000, 40000),
+              'female': (10000, 40000)},
+    "Ayushmaan": {'event_time': datetime.now() - timedelta(days=2), 'vaccination_completed': 0, 'male': (10000, 40000),
+                  'female': (10000, 40000)},
 }
 
 # check for arguments, exit if wrong
@@ -36,14 +40,18 @@ while True:
     male = random.randint(centre['male'][0], centre['male'][1])
     female = random.randint(centre['female'][0], centre['female'][1])
     vaccination_completed = male + female
+    event_time = centre['event_time'] + timedelta(minutes=random.randint(0, 60))
 
     # create CSV structure
-    # TODO : use  json instead of csv
     # TODO: generate dates for hours later
-    msg = f'{datetime.now()},{centre_name},{vaccination_completed},{male},{female}'
-
+    data = {'event_time': event_time,
+            'center_name': centre_name,
+            'vaccination_completed': vaccination_completed,
+            'male': male,
+            'female': female
+            }
     # send to Kafka
-    producer.send('covid-vaccine-data', bytes(msg, encoding='utf8'))
+    producer.send('covid-vaccine-data', json.dumps(data, default=str).encode('utf-8'))
     print(f'sending data to kafka, #{count}')
 
     count += 1
