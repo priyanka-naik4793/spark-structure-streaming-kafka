@@ -10,12 +10,12 @@ import json
 
 # different vaccination "centres" with different
 VACCINATION_CENTRES = {
-    "Fortis": {'event_time': datetime.now(), 'vaccination_completed': 0, 'male': (10000, 40000),
-               'female': (10000, 40000)},
-    "Akash": {'event_time': datetime.now() - timedelta(days=1), 'vaccination_completed': 0, 'male': (10000, 40000),
-              'female': (10000, 40000)},
-    "Ayushmaan": {'event_time': datetime.now() - timedelta(days=2), 'vaccination_completed': 0, 'male': (10000, 40000),
-                  'female': (10000, 40000)},
+    "Fortis": {'event_time': datetime.now(), 'vaccination_completed': 0, 'male': (10, 40),
+               'female': (10, 40)},
+    "Akash": {'event_time': datetime.now() - timedelta(days=1), 'vaccination_completed': 0, 'male': (10, 40),
+              'female': (10, 40)},
+    "Ayushmaan": {'event_time': datetime.now() - timedelta(days=2), 'vaccination_completed': 0, 'male': (10, 40),
+                  'female': (10, 40)},
 }
 
 # check for arguments, exit if wrong
@@ -42,8 +42,6 @@ while True:
     vaccination_completed = male + female
     event_time = centre['event_time'] + timedelta(minutes=random.randint(0, 60))
 
-    # create CSV structure
-    # TODO: generate dates for hours later
     data = {'event_time': event_time,
             'center_name': centre_name,
             'vaccination_completed': vaccination_completed,
